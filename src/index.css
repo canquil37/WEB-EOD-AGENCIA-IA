@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  body {
+    margin: 0;
+    padding: 0;
+    @apply bg-[#050505] text-white overflow-hidden select-none;
+    -webkit-font-smoothing: antialiased;
+    /* Fuente Inter para textos y JetBrains o Space Mono para el look técnico */
+    font-family: 'Inter', 'Space Mono', monospace;
+  }
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
+
+/* --- EFECTOS DE INTERFAZ EOD --- */
+
+/* Scanline: La línea de escaneo que recorre la pantalla */
+body::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.15) 50%
+  ), 
+  linear-gradient(
+    90deg, 
+    rgba(255, 0, 0, 0.02), 
+    rgba(0, 255, 0, 0.01), 
+    rgba(0, 0, 255, 0.02)
+  );
+  z-index: 100;
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+}
+
+/* Animación de la línea de barrido */
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.scanline-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 184, 0, 0.1),
+    transparent
+  );
+  opacity: 0.5;
+  z-index: 101;
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+}
+
+/* Ocultar Scrollbar totalmente */
+* {
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Efecto de resplandor para textos activos */
+.glow-text {
+  text-shadow: 0 0 10px rgba(255, 184, 0, 0.5);
+}
+
+/* Cursor Personalizado (Opcional - solo punto) */
+.custom-cursor {
+  width: 6px;
+  height: 6px;
+  background: #FFB800;
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 999;
+  mix-blend-mode: difference;
+}
