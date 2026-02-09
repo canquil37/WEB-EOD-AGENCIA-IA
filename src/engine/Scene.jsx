@@ -1,109 +1,91 @@
-import React, { useRef, useMemo } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Sphere, MeshDistortMaterial, Float, Stars } from '@react-three/drei'
-import { EffectComposer, Bloom, Noise, Vignette, ChromaticAberration } from '@react-three/postprocessing'
-import { useEODStore } from '../store/useEODStore'
+import React, { useRef, Suspense } from 'react'
+import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import { OrbitControls, Float, MeshDistortMaterial } from '@react-three/drei'
 import * as THREE from 'three'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
+import { useEODStore } from '../store/useEODStore'
 
-// Componente: El Núcleo de IA (La Esfera Líquida)
-function NeuralCore() {
-  const meshRef = useRef()
+function SceneContent() {
+  const logoTexture = useLoader(THREE.TextureLoader, '/logo-eod.png')
+  const lightRef = useRef()
   const activeService = useEODStore((state) => state.activeService)
-  
-  // Colores reactivos según el estado (puedes personalizarlos)
-  const color = useMemo(() => {
-    if (!activeService) return "#333333" // Reposo (Gris oscuro metálico)
-    return "#FFB800" // Activo (Amarillo EOD)
-  }, [activeService])
 
   useFrame((state) => {
-    // Rotación suave constante
-    if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.getElapsedTime() * 0.2
-      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3
-    }
+    if (!lightRef.current) return
+    const { x, y } = state.mouse
+    // Ajuste de distancia: Z en 3.5 evita el "quemado" visual en el centro
+    lightRef.current.position.set(x * 5, y * 5, 3.5)
   })
 
   return (
-    <Float speed={2} rotationIntensity={1.5} floatIntensity={2}>
-      <Sphere args={[1, 64, 64]} ref={meshRef} scale={1.8}>
-        <MeshDistortMaterial
-          color={color}
-          envMapIntensity={0.4}
-          clearcoat={1}
-          clearcoatRoughness={0}
-          metalness={0.9} // Aspecto metálico
-          roughness={0.1}
-          distort={activeService ? 0.6 : 0.3} // Más distorsión si hay servicio activo
-          speed={activeService ? 3 : 1.5} // Más velocidad si hay servicio activo
-        />
-      </Sphere>
-    </Float>
-  )
-}
-
-// Componente: Partículas de Fondo (La Red)
-function DataField() {
-  return (
-    <Stars 
-      radius={100} 
-      depth={50} 
-      count={5000} 
-      factor={4} 
-      saturation={0} 
-      fade 
-      speed={1} 
-    />
-  )
-}
-
-// ESCENA PRINCIPAL
-export default function Scene() {
-  const activeService = useEODStore((state) => state.activeService)
-
-  return (
-    <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
-      {/* Luces cinematográficas */}
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
-      <pointLight position={[-10, -10, -5]} intensity={1} color="#FFB800" />
+    <>
+      <ambientLight intensity={0.1} />
       
-      {/* Actores */}
-      <NeuralCore />
-      <DataField />
+      {/* LUZ FOCAL: Intensidad ajustada para un brillo premium, no cegador */}
+      <pointLight 
+        ref={lightRef} 
+        intensity={35} 
+        color="#ffffff" 
+        distance={12} 
+        decay={2}
+      />
+      
+      <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.2}>
+        
+        {/* LOGO EOD: Mantenemos el material reactivo pero con emissive más suave */}
+        <mesh position={[0, 0, 0.2]}>
+          <planeGeometry args={[1.15, 0.7]} />
+          <meshStandardMaterial 
+            map={logoTexture} 
+            transparent={true} 
+            alphaTest={0.5}
+            emissive="#FFB800"
+            emissiveIntensity={0.5} // Bajamos el brillo base
+            metalness={0.8}
+            roughness={0.2}
+          />
+        </mesh>
 
-      {/* Post-Procesado (EFECTOS DE CÁMARA BRUTALES) */}
-      <EffectComposer disableNormalPass>
-        {/* Bloom: El brillo neon intenso */}
+        {/* ESFERA CAÓTICA: Se mantiene igual de épica */}
+        <mesh>
+          <sphereGeometry args={[0.75, 64, 64]} /> 
+          <MeshDistortMaterial 
+            color="#FF8A00" 
+            speed={activeService ? 6 : 3} 
+            distort={activeService ? 0.75 : 0.5} 
+            radius={1} 
+            wireframe 
+            transparent
+            opacity={0.12} 
+          />
+        </mesh>
+      </Float>
+
+      <EffectComposer>
+        {/* Subimos el threshold para que el brillo sea más definido y menos "borroso" */}
         <Bloom 
-          luminanceThreshold={0.2} 
-          mipmapBlur 
+          luminanceThreshold={0.4} 
           intensity={1.5} 
-          radius={0.6}
-        />
-        
-        {/* Noise: Grano de película para realismo */}
-        <Noise opacity={0.15} />
-        
-        {/* Vignette: Oscurece las esquinas para focalizar la vista */}
-        <Vignette eskil={false} offset={0.1} darkness={1.1} />
-        
-        {/* Chromatic Aberration: Efecto de "Glitch" o lente barata (RGB Split) */}
-        {/* Solo se activa fuerte cuando hay un servicio activo */}
-        <ChromaticAberration 
-          offset={[activeService ? 0.002 : 0, activeService ? 0.002 : 0]} 
+          radius={0.4} 
+          mipmapBlur
         />
       </EffectComposer>
+    </>
+  )
+}
 
-      {/* Controles (limitados para que el usuario no rompa la vista) */}
-      <OrbitControls 
-        enableZoom={false} 
-        enablePan={false} 
-        autoRotate={!activeService} // Rota solo si no estás interactuando
-        autoRotateSpeed={0.5}
-        maxPolarAngle={Math.PI / 1.5}
-        minPolarAngle={Math.PI / 3}
-      />
+export default function Scene() {
+  return (
+    <Canvas 
+      camera={{ position: [0, 0, 5], fov: 30 }} 
+      className="w-full h-full"
+      dpr={[1, 2]}
+    >
+      <color attach="background" args={['#050505']} />
+      <Suspense fallback={null}>
+        <SceneContent />
+      </Suspense>
+      <OrbitControls enableZoom={false} enablePan={false} />
     </Canvas>
   )
 }

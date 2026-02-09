@@ -148,8 +148,8 @@ function App() {
         </motion.footer>
       </motion.div>
 
-{/* EFECTOS DE POST-PROCESADO (Overlay CSS) */}
-<div className="absolute inset-0 pointer-events-none z-50 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
+      {/* EFECTOS DE POST-PROCESADO (Overlay CSS) */}
+      <div className="absolute inset-0 pointer-events-none z-50 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
       <div className="absolute inset-0 pointer-events-none z-40 bg-gradient-to-t from-black via-transparent to-black/50" />
     </main>
   )
